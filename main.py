@@ -1,8 +1,10 @@
 from __future__ import print_function
 
 import io
+import logging
 import os
 
+from datetime import datetime
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -10,12 +12,21 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
 from PyPDF2 import PdfFileReader
+from logging.handlers import RotatingFileHandler
 
 from utils import convert_url_to_file_id
 
 
-# Max size of pdf file - bytes
-FILE_MAX_SIZE = 10485760
+logging.basicConfig(
+    level=logging.INFO,
+    filename='main.log',
+    format='%(asctime)s, %(levelname)s, %(name)s, %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = RotatingFileHandler(
+    'my_logger.log', maxBytes=50000000, backupCount=5)
+logger.addHandler(handler)
+
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/drive']
@@ -24,6 +35,10 @@ DOWNLOAD_DIR = 'downloads'
 
 
 class GoogleDriveAPI:
+    """
+    This class provides connection to the Google Drive API service
+    and allow user to read and download data.
+    """
     def __init__(self):
         self.creds = None
         if os.path.exists('token.json'):
@@ -31,15 +46,26 @@ class GoogleDriveAPI:
         if not self.creds or not self.creds.valid:
             if self.creds and self.creds.expired and self.creds.refresh_token:
                 self.creds.refresh(Request())
+                logging.info('The token is expired, it will be refreshed')
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
                     'credentials.json', SCOPES)
                 self.creds = flow.run_local_server(port=0)
+                logging.info('Request for a new token')
             with open('token.json', 'w') as token:
                 token.write(self.creds.to_json())
-        self.service = build('drive', 'v3', credentials=self.creds)
+        try:
+            self.service = build('drive', 'v3', credentials=self.creds)
+        except Exception as error:
+            logging.error(f'Resource for interacting with an API was not built: {error}')
+
+        logging.info('Connected to the API service')
 
     def get_files_id_and_name_from_folder(self, folder_id: str):
+        """
+        Returns the tuple of all file names and ids in gdrive folder
+        the user has access to.
+        """
         files_id = []
         file_names = []
         try:
@@ -52,44 +78,47 @@ class GoogleDriveAPI:
                     pageToken=page_token).execute()
                 items = response.get('files', [])
                 if not items:
-                    print('No files found.')
+                    logging.error('No files found.')
                     return
-                print('Files:')
                 for item in items:
                     files_id.append(item['id'])
                     file_names.append(item['name'])
-                    print(f'File name: {item["name"]} | id: {item["id"]}')
+                    logging.info(f'File name: {item["name"]} | id: {item["id"]}')
 
                 page_token = response.get('nextPageToken', None)
                 if page_token is None:
                     break
         except HttpError as error:
-            print(f'An error occurred: {error}')
+            logging.error(f'An error occurred: {error}')
 
         result = zip(files_id, file_names)
 
         return result
 
-    def get_file_name_from_id(self, files_id: list):
-        file_names = []
-        for file_id in files_id:
-            try:
-                response = self.service.files().get(
-                    fileId=file_id).execute()
-                name = response.get('name', [])
-                if not name:
-                    print('File not found.')
-                    return
-                file_names.append(name)
+    def get_file_name_from_id(self, file_id: str):
+        """
+        Gets a file`s name by gdrive`s id of a file.
+        """
+        name = ''
+        try:
+            response = self.service.files().get(fileId=file_id).execute()
+            name = response.get('name', [])
+            if not name:
+                logging.info('File not found.')
+                return
 
-            except HttpError as error:
-                print(f'An error occurred: {error}')
+        except HttpError as error:
+            logging.error(f'An error occurred: {error}')
 
-        result = zip(files_id, file_names)
-
-        return result
+        return name
 
     def download_pdf(self, file_id):
+        """Downloads a file
+        Args:
+            file_id: ID of the file to download
+        Returns: IO object with location.
+        Checks: Is A File object a PDF file?
+        """
         try:
             request = self.service.files().get_media(fileId=file_id)
             file = io.BytesIO()
@@ -97,18 +126,19 @@ class GoogleDriveAPI:
             done = False
             while done is False:
                 status, done = downloader.next_chunk()
-                print(F'Download {int(status.progress() * 100)}.')
+                print(f'Download {int(status.progress() * 100)}.')
 
         except HttpError as error:
-            print(F'An error occurred: {error}')
+            logging.error(f'An error occurred: {error}')
             file = None
 
         file.seek(0)
 
+        # comment this block if you need to work with all file formats
         try:
             PdfFileReader(file)
         except Exception as error:
-            print(F'An error occurred: {error}')
+            logging.error(f'An error occurred: {error}')
             file = None
 
         return file.getvalue()
@@ -117,13 +147,17 @@ class GoogleDriveAPI:
 def main(urls: list):
     if not os.path.exists(DOWNLOAD_DIR):
         os.makedirs(DOWNLOAD_DIR)
-    id_list = convert_url_to_file_id(urls)
     client = GoogleDriveAPI()
+    id_list = [convert_url_to_file_id(url) for url in urls]
+    file_names = [client.get_file_name_from_id(id) for id in id_list]
 
-    for file_id, file_name in client.get_file_name_from_id(id_list):
+    for file_id, file_name in zip(id_list, file_names):
         file = client.download_pdf(file_id)
+        if file is None:
+            logging.error(f'File with id: {file_id} & name: {file_name} is None')
+            continue
         if os.path.exists(f'{DOWNLOAD_DIR}/{file_name}'):
-            file_name = f'{file_id}_{file_name}'
+            file_name = f'{file_id}_{datetime.now()}_{file_name}'
         with open(f'{DOWNLOAD_DIR}/{file_name}', 'wb') as f:
             f.write(file)
 

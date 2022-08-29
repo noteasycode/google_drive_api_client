@@ -6,6 +6,8 @@ import re
 from datetime import datetime
 from PyPDF2 import PdfFileReader, PdfFileWriter
 
+
+# Max size of pdf file - bytes
 FILE_MAX_SIZE = 10485760
 
 DOWNLOAD_DIR = 'downloads'
@@ -52,11 +54,11 @@ def validate_and_save_pdf(pdf_path: str):
            f'to folder "{DOWNLOAD_DIR}"'
 
 
-def convert_url_to_file_id(url_list):
-    list_id = []
+def convert_url_to_file_id(url: str):
+    """
+    Gets file`s id from the url path to a file
+    on Google Drive
+    """
     pattern = '\/d\/(.*)\/view'
-    for url in url_list:
-        id = re.findall(pattern, url)
-        if id:
-            list_id.append(id[0])
-    return list_id
+    file_id = re.findall(pattern, url)
+    return file_id[0] if file_id else None
