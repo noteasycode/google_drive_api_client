@@ -168,6 +168,7 @@ def main(urls: list):
                if GoogleDriveAPI.convert_url_to_file_id(url) is not None]
     files_dict = {id: client.get_file_name_from_id(id) for id in id_list}
 
+    counter = 0
     for file_id, file_name in files_dict.items():
         file = client.download_pdf(file_id)
         if file is None:
@@ -177,6 +178,9 @@ def main(urls: list):
             file_name = f'{file_id}_{datetime.now()}_{file_name}'
         with open(f'{DOWNLOAD_DIR}/{file_name}', 'wb') as f:
             f.write(file)
+        counter += 1
+
+    print(f'{len(urls)} URLs were provided | {counter} files downloaded')
 
 
 if __name__ == '__main__':
