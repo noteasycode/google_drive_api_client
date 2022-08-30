@@ -132,17 +132,15 @@ class GoogleDriveAPI:
         except HttpError as error:
             logging.error(f'An error occurred: {error}')
             file = None
-
-        if file is None:
             return file
 
         file.seek(0)
-        # comment this block if you need to work with all file formats
         try:
             PdfFileReader(file)
         except Exception as error:
             logging.error(f'An error occurred: {error}')
             file = None
+            return file
 
         return file.getvalue()
 
