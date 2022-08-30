@@ -158,7 +158,7 @@ class GoogleDriveAPI:
             file_id = re.findall(pattern, url)[0]
 
         except Exception as error:
-            logging.error(f'An error occurred: {error}')
+            logging.error(f'Invalid url: {url}')
             file_id = None
 
         return file_id
