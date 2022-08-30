@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import logging
 import os
 import re
 
@@ -50,15 +51,5 @@ def validate_and_save_pdf(pdf_path: str):
             pdf_writer.write(output_pdf)
             output_pdf.close()
         file.close()
-    return 'File has been successfully checked and saved ' \
+    return f'File has been successfully checked and saved ' \
            f'to folder "{DOWNLOAD_DIR}"'
-
-
-def convert_url_to_file_id(url: str):
-    """
-    Gets file`s id from the url path to a file
-    on Google Drive
-    """
-    pattern = '\/d\/(.*)\/view'
-    file_id = re.findall(pattern, url)
-    return file_id[0] if file_id else None

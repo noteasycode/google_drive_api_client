@@ -3,6 +3,8 @@ from __future__ import print_function
 import io
 import logging
 import os
+import re
+import sys
 
 from datetime import datetime
 from google.auth.transport.requests import Request
@@ -13,8 +15,6 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
 from PyPDF2 import PdfFileReader
 from logging.handlers import RotatingFileHandler
-
-from utils import convert_url_to_file_id
 
 
 logging.basicConfig(
@@ -58,6 +58,7 @@ class GoogleDriveAPI:
             self.service = build('drive', 'v3', credentials=self.creds)
         except Exception as error:
             logging.error(f'Resource for interacting with an API was not built: {error}')
+            sys.exit('Resource for interacting with an API was not built')
 
         logging.info('Connected to the API service')
 
@@ -99,7 +100,7 @@ class GoogleDriveAPI:
         """
         Gets a file`s name by gdrive`s id of a file.
         """
-        name = ''
+        name = str()
         try:
             response = self.service.files().get(fileId=file_id).execute()
             name = response.get('name', [])
@@ -132,8 +133,10 @@ class GoogleDriveAPI:
             logging.error(f'An error occurred: {error}')
             file = None
 
-        file.seek(0)
+        if file is None:
+            return file
 
+        file.seek(0)
         # comment this block if you need to work with all file formats
         try:
             PdfFileReader(file)
@@ -143,15 +146,33 @@ class GoogleDriveAPI:
 
         return file.getvalue()
 
+    @staticmethod
+    def convert_url_to_file_id(url: str):
+        """
+        Gets file`s id from the url path to a file
+        on Google Drive
+        """
+        file_id = str()
+        pattern = '\/d\/(.*)\/view'
+        try:
+            file_id = re.findall(pattern, url)[0]
+
+        except Exception as error:
+            logging.error(f'An error occurred: {error}')
+            file_id = None
+
+        return file_id
+
 
 def main(urls: list):
     if not os.path.exists(DOWNLOAD_DIR):
         os.makedirs(DOWNLOAD_DIR)
     client = GoogleDriveAPI()
-    id_list = [convert_url_to_file_id(url) for url in urls]
-    file_names = [client.get_file_name_from_id(id) for id in id_list]
+    id_list = [client.convert_url_to_file_id(url) for url in urls
+               if client.convert_url_to_file_id(url) is not None]
+    files_dict = {id: client.get_file_name_from_id(id) for id in id_list}
 
-    for file_id, file_name in zip(id_list, file_names):
+    for file_id, file_name in files_dict.items():
         file = client.download_pdf(file_id)
         if file is None:
             logging.error(f'File with id: {file_id} & name: {file_name} is None')
@@ -165,5 +186,7 @@ def main(urls: list):
 if __name__ == '__main__':
     test_urls = ['https://drive.google.com/file/d/1hCMhVeqc3hnfbikpz0dhBPLRH8Bfa3-V/view',
                  'https://drive.google.com/file/d/1lOCNpewxec_wMwIqvSUAzaEPW_Uu2j54/view',
-                 'https://drive.google.com/file/d/1Dh_VJG-yHqP4yrjE7nBZ7HuwWtAlN-ha/view']
+                 'https://drive.google.com/file/d/168DDAkgmGaAv3DyQ2gBLl6RIOb4_f2Ui',
+                 'https://drive.google.com/file/d/1Dh_VJG-yHqP4yrjE7nBZ7HuwWtAlN-ha/view',
+                 'https://drive.google.com/file/d/1lOCNpewxec_wMwIqvSUAzaEPW_Uu2j54/view',]
     main(test_urls)
