@@ -168,8 +168,8 @@ def main(urls: list):
     if not os.path.exists(DOWNLOAD_DIR):
         os.makedirs(DOWNLOAD_DIR)
     client = GoogleDriveAPI()
-    id_list = [client.convert_url_to_file_id(url) for url in urls
-               if client.convert_url_to_file_id(url) is not None]
+    id_list = [GoogleDriveAPI.convert_url_to_file_id(url) for url in urls
+               if GoogleDriveAPI.convert_url_to_file_id(url) is not None]
     files_dict = {id: client.get_file_name_from_id(id) for id in id_list}
 
     for file_id, file_name in files_dict.items():
@@ -188,5 +188,6 @@ if __name__ == '__main__':
                  'https://drive.google.com/file/d/1lOCNpewxec_wMwIqvSUAzaEPW_Uu2j54/view',
                  'https://drive.google.com/file/d/168DDAkgmGaAv3DyQ2gBLl6RIOb4_f2Ui',
                  'https://drive.google.com/file/d/1Dh_VJG-yHqP4yrjE7nBZ7HuwWtAlN-ha/view',
-                 'https://drive.google.com/file/d/1lOCNpewxec_wMwIqvSUAzaEPW_Uu2j54/view',]
+                 'https://drive.google.com/file/d/1lOCNpewxec_wMwIqvSUAzaEPW_Uu2j54/view',
+                 ]
     main(test_urls)
