@@ -191,10 +191,15 @@ def main(urls: list):
 
 if __name__ == '__main__':
     test_urls = [
-        'https://drive.google.com/file/d/1hCMhVeqc3hnfbikpz0dhBPLRH8Bfa3-V/view',
-        'https://drive.google.com/file/d/1lOCNpewxec_wMwIqvSUAzaEPW_Uu2j54/view',
-        'https://drive.google.com/file/d/168DDAkgmGaAv3DyQ2gBLl6RIOb4_f2Ui',
-        'https://drive.google.com/file/d/1Dh_VJG-yHqP4yrjE7nBZ7HuwWtAlN-ha/view',
-        'https://drive.google.com/file/d/1lOCNpewxec_wMwIqvSUAzaEPW_Uu2j54/view',
+        'https://drive.google.com/file/d/'
+        '1hCMhVeqc3hnfbikpz0dhBPLRH8Bfa3-V/view',
+        'https://drive.google.com/file/d/'
+        '1lOCNpewxec_wMwIqvSUAzaEPW_Uu2j54/view',
+        'https://drive.google.com/file/d/'
+        '168DDAkgmGaAv3DyQ2gBLl6RIOb4_f2Ui',
+        'https://drive.google.com/file/d/'
+        '1Dh_VJG-yHqP4yrjE7nBZ7HuwWtAlN-ha/view',
+        'https://drive.google.com/file/d/'
+        '1lOCNpewxec_wMwIqvSUAzaEPW_Uu2j54/view',
     ]
     main(test_urls)
