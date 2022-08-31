@@ -168,8 +168,8 @@ def main(urls: list):
     if not os.path.exists(DOWNLOAD_DIR):
         os.makedirs(DOWNLOAD_DIR)
     client = GoogleDriveAPI()
-    id_list = [GoogleDriveAPI.convert_url_to_file_id(url) for url in urls
-               if GoogleDriveAPI.convert_url_to_file_id(url) is not None]
+    id_list = [client.convert_url_to_file_id(url) for url in urls
+               if client.convert_url_to_file_id(url) is not None]
     files_dict = {id: client.get_file_name_from_id(id) for id in id_list}
 
     counter = 0
