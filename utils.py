@@ -1,8 +1,6 @@
 from __future__ import print_function
 
-import logging
 import os
-import re
 
 from datetime import datetime
 from PyPDF2 import PdfFileReader, PdfFileWriter

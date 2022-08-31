@@ -42,7 +42,8 @@ class GoogleDriveAPI:
     def __init__(self):
         self.creds = None
         if os.path.exists('token.json'):
-            self.creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+            self.creds = Credentials.from_authorized_user_file(
+                'token.json', SCOPES)
         if not self.creds or not self.creds.valid:
             if self.creds and self.creds.expired and self.creds.refresh_token:
                 self.creds.refresh(Request())
@@ -57,7 +58,8 @@ class GoogleDriveAPI:
         try:
             self.service = build('drive', 'v3', credentials=self.creds)
         except Exception as error:
-            logging.error(f'Resource for interacting with an API was not built: {error}')
+            logging.error(f'Resource for interacting with an '
+                          f'API was not built: {error}')
             sys.exit('Resource for interacting with an API was not built')
 
         logging.info('Connected to the API service')
@@ -84,7 +86,9 @@ class GoogleDriveAPI:
                 for item in items:
                     files_id.append(item['id'])
                     file_names.append(item['name'])
-                    logging.info(f'File name: {item["name"]} | id: {item["id"]}')
+                    logging.info(
+                        f'File name: {item["name"]} | id: {item["id"]}'
+                    )
 
                 page_token = response.get('nextPageToken', None)
                 if page_token is None:
@@ -153,7 +157,7 @@ class GoogleDriveAPI:
         try:
             file_id = re.findall(pattern, url)[0]
 
-        except Exception as error:
+        except Exception:
             logging.error(f'Invalid url: {url}')
             file_id = None
 
@@ -172,7 +176,9 @@ def main(urls: list):
     for file_id, file_name in files_dict.items():
         file = client.download_pdf(file_id)
         if file is None:
-            logging.error(f'File with id: {file_id} & name: {file_name} is None')
+            logging.error(
+                f'File with id: {file_id} & name: {file_name} is None'
+            )
             continue
         if os.path.exists(f'{DOWNLOAD_DIR}/{file_name}'):
             file_name = f'{file_id}_{datetime.now()}_{file_name}'
@@ -184,10 +190,11 @@ def main(urls: list):
 
 
 if __name__ == '__main__':
-    test_urls = ['https://drive.google.com/file/d/1hCMhVeqc3hnfbikpz0dhBPLRH8Bfa3-V/view',
-                 'https://drive.google.com/file/d/1lOCNpewxec_wMwIqvSUAzaEPW_Uu2j54/view',
-                 'https://drive.google.com/file/d/168DDAkgmGaAv3DyQ2gBLl6RIOb4_f2Ui',
-                 'https://drive.google.com/file/d/1Dh_VJG-yHqP4yrjE7nBZ7HuwWtAlN-ha/view',
-                 'https://drive.google.com/file/d/1lOCNpewxec_wMwIqvSUAzaEPW_Uu2j54/view',
-                 ]
+    test_urls = [
+        'https://drive.google.com/file/d/1hCMhVeqc3hnfbikpz0dhBPLRH8Bfa3-V/view',
+        'https://drive.google.com/file/d/1lOCNpewxec_wMwIqvSUAzaEPW_Uu2j54/view',
+        'https://drive.google.com/file/d/168DDAkgmGaAv3DyQ2gBLl6RIOb4_f2Ui',
+        'https://drive.google.com/file/d/1Dh_VJG-yHqP4yrjE7nBZ7HuwWtAlN-ha/view',
+        'https://drive.google.com/file/d/1lOCNpewxec_wMwIqvSUAzaEPW_Uu2j54/view',
+    ]
     main(test_urls)
