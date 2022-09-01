@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 
 from datetime import datetime
+from openpyxl import load_workbook
 from PyPDF2 import PdfFileReader, PdfFileWriter
 
 
@@ -51,3 +52,11 @@ def validate_and_save_pdf(pdf_path: str):
         file.close()
     return f'File has been successfully checked and saved ' \
            f'to folder "{DOWNLOAD_DIR}"'
+
+
+def get_xlsx_data(file_path: str):
+    wb = load_workbook(file_path)
+    sheet = wb.active
+    xlsx_dict = {folder_name.value: url.value.strip( ).split(';')
+            for folder_name in sheet['A'] for url in sheet['B']}
+    return xlsx_dict

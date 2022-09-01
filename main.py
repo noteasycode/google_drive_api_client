@@ -16,6 +16,8 @@ from googleapiclient.http import MediaIoBaseDownload
 from PyPDF2 import PdfFileReader
 from logging.handlers import RotatingFileHandler
 
+from utils import get_xlsx_data
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -117,7 +119,7 @@ class GoogleDriveAPI:
 
         return name
 
-    def download_pdf(self, file_id):
+    def get_pdf(self, file_id):
         """Downloads a file
         Args:
             file_id: ID of the file to download
@@ -174,7 +176,7 @@ def main(urls: list):
 
     counter = 0
     for file_id, file_name in files_dict.items():
-        file = client.download_pdf(file_id)
+        file = client.get_pdf(file_id)
         if file is None:
             logging.error(
                 f'File with id: {file_id} & name: {file_name} is None'
