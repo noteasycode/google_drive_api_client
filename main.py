@@ -96,7 +96,7 @@ class GoogleDriveAPI:
         except HttpError as error:
             logging.error(f'An error occurred: {error}')
 
-        result = zip(files_id, file_names)
+        result = dict(zip(files_id, file_names))
 
         return result
 
