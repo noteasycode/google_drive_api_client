@@ -57,6 +57,6 @@ def validate_and_save_pdf(pdf_path: str):
 def get_xlsx_data(file_path: str):
     wb = load_workbook(file_path)
     sheet = wb.active
-    xlsx_dict = {folder_name.value: url.value.strip( ).split(';')
+    xlsx_dict = {folder_name.value: url.value.strip().split(';')
                  for folder_name in sheet['A'] for url in sheet['B']}
     return xlsx_dict
