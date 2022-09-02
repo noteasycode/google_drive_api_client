@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import functools
 import os
 
 from datetime import datetime
@@ -60,3 +61,16 @@ def get_xlsx_data(file_path: str):
     xlsx_dict = {folder_name.value: url.value.strip().split(';')
                  for folder_name in sheet['A'] for url in sheet['B']}
     return xlsx_dict
+
+
+def make_xlsx_report(func):
+    @functools.wraps(func)
+    def wrapper_make_xlsx_report(*args, **kwargs):
+        args_repr = [repr(a) for a in args]  # 1
+        kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]  # 2
+        signature = ", ".join(args_repr + kwargs_repr)
+        print(f"Calling {func.__name__}({signature})")
+        value = func(*args, **kwargs)
+        print(f"{func.__name__!r} returned {value!r}")
+        return value
+    return wrapper_make_xlsx_report
