@@ -198,7 +198,7 @@ class GoogleDriveAPI:
         print(f'{len(urls)} URLs were provided | {counter} files downloaded')
 
 
-# @make_xlsx_report
+@make_xlsx_report
 def main(data: dict):
     report = {}
     client = GoogleDriveAPI()
@@ -209,24 +209,26 @@ def main(data: dict):
         elif os.path.exists(file_path):
             file_path = f'{DOWNLOAD_DIR}/{folder_name}_{datetime.now()}/'
             os.makedirs(file_path)
+
         report_key = file_path.lstrip(f'{DOWNLOAD_DIR}/').rstrip('/')
-        print(report_key)
-        for url in range(len(urls)):
-            file_id = client.convert_url_to_file_id(urls[url])
+        report[report_key] = [[] for _ in range(len(urls))]
+
+        for item in range(len(urls)):
+            file_id = client.convert_url_to_file_id(urls[item])
             file_name = client.get_file_name_from_id(file_id)
             file = client.get_pdf(file_id)
             if file is None:
                 logging.error(
                     f'File with id: {file_id} & name: {file_name} is None'
                 )
-                report.update({report_key: [file_name, file_id, 'not found']})
+                report[report_key][item].extend([file_name, file_id, 'not found'])
                 continue
             file_path += file_name
             with open(file_path, 'wb') as f:
                 f.write(file)
                 file_path = file_path.rstrip(file_name)
-            # report.update({report_key: [file_name, file_id, 'ok']})
-    print(report)
+            report[report_key][item].extend([file_name, file_id, 'ok'])
+    return report
 
 
 if __name__ == '__main__':
