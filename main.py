@@ -14,8 +14,9 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
-from PyPDF2 import PdfFileReader
 from logging.handlers import RotatingFileHandler
+from PyPDF2 import PdfFileReader
+from typing import Dict, List
 
 from utils import get_xlsx_data, make_xlsx_report
 
@@ -37,6 +38,9 @@ SCOPES = ['https://www.googleapis.com/auth/drive']
 DOWNLOAD_DIR = 'downloads'
 if not os.path.exists(DOWNLOAD_DIR):
     os.makedirs(DOWNLOAD_DIR)
+
+# Time format
+TF = '%Y-%m-%d %H-%M-%S'
 
 
 class GoogleDriveAPI:
@@ -190,7 +194,8 @@ class GoogleDriveAPI:
                 )
                 continue
             if os.path.exists(f'{DOWNLOAD_DIR}/{file_name}'):
-                file_name = f'{file_id}_{datetime.now()}_{file_name}'
+                file_name = f'{file_id}_' \
+                            f'{datetime.now().strftime(TF)}_{file_name}'
             with open(f'{DOWNLOAD_DIR}/{file_name}', 'wb') as f:
                 f.write(file)
             counter += 1
@@ -199,7 +204,14 @@ class GoogleDriveAPI:
 
 
 @make_xlsx_report
-def main(data: dict):
+def main(data: dict) -> Dict[str, List[list]]:
+    """
+    Downloads PDF files;
+    :param data: dict data type which contains name of
+    folder for saving file as key
+    and lists of urls as values of a dict;
+    :return: data for creating reports
+    """
     report = {}
     client = GoogleDriveAPI()
     for folder_name, urls in data.items():
@@ -207,7 +219,8 @@ def main(data: dict):
         if not os.path.exists(file_path):
             os.makedirs(file_path)
         elif os.path.exists(file_path):
-            file_path = f'{DOWNLOAD_DIR}/{folder_name}_{datetime.now()}/'
+            file_path = f'{DOWNLOAD_DIR}/{folder_name}_' \
+                        f'{datetime.now().strftime(TF)}/'
             os.makedirs(file_path)
 
         report_key = file_path.lstrip(f'{DOWNLOAD_DIR}/').rstrip('/')
@@ -221,7 +234,8 @@ def main(data: dict):
                 logging.error(
                     f'File with id: {file_id} & name: {file_name} is None'
                 )
-                report[report_key][item].extend([file_name, file_id, 'not found'])
+                report[report_key][item].extend(
+                    [file_name, file_id, 'not found'])
                 continue
             file_path += file_name
             with open(file_path, 'wb') as f:
