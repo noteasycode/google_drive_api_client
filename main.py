@@ -209,7 +209,7 @@ def main(data: dict) -> Dict[str, List[list]]:
     Downloads PDF files;
     :param data: dict data type which contains name of
     folder for saving file as key
-    and lists of urls as values of a dict;
+    and nested lists of urls in each list as values of a dict;
     :return: data for creating reports
     """
     report = {}
